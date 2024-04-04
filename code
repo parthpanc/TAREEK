@@ -16,9 +16,9 @@ def prioritize_cases(case_data):
 
 def get_priority_level(case_type, waiting_time):
     priority_levels = {
-        'Murder': 3,
-        'Robbery': 2,
-        'Financial Fraud': 1
+        'M': 3,
+        'R': 2,
+        'F': 1
     }
     
     if waiting_time > 60:
@@ -31,8 +31,8 @@ if __name__ == "__main__":
 
     case_data = []
     for _ in range(num_cases):
-        case_type = input("Enter the type of case (Murder, Robbery, or Financial Fraud): ")
-        last_hearing_date = input("Enter the last hearing date (YYYY-MM-DD): ")
+        case_type = input("Enter the type of case (Murder(M), Robbery(R), or Financial Fraud(F)): ")
+        last_hearing_date = input("Enter the last hearing date (DD-MM-YYYY): ")
 
         waiting_time = calculate_waiting_time(last_hearing_date)
 

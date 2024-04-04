@@ -1,51 +1,46 @@
 import sqlite3
 
+DB_FILE = "cases.db"
+
 def create_table():
-    connection = sqlite3.connect("cases.db")
-    cursor = connection.cursor()
+    with sqlite3.connect(DB_FILE) as connection:
+        cursor = connection.cursor()
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS cases (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            case_type TEXT,
-            last_hearing_date TEXT,
-            waiting_time INTEGER
-        )
-    ''')
-
-    connection.commit()
-    connection.close()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS cases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                case_number INTEGER,                
+                case_type TEXT,
+                last_hearing_date TEXT,
+                waiting_time INTEGER
+            )
+        ''')
 
 def insert_case(case_number, case_type, last_hearing_date, waiting_time):
-    connection = sqlite3.connect("cases.db")
-    cursor = connection.cursor()
+    with sqlite3.connect(DB_FILE) as connection:
+        cursor = connection.cursor()
 
-    cursor.execute('''
-        INSERT INTO cases (case_type, last_hearing_date, waiting_time)
-        VALUES (?, ?, ?)
-    ''', (case_type, last_hearing_date, waiting_time))
+        cursor.execute('''
+            INSERT INTO cases (case_number, case_type, last_hearing_date, waiting_time)
+            VALUES (?, ?, ?, ?)
+        ''', (case_number, case_type, last_hearing_date, waiting_time))
 
-    case_number = cursor.lastrowid
-
-    connection.commit()
-    connection.close()
+        case_number = cursor.lastrowid
 
     return case_number
 
 def print_table():
-    connection = sqlite3.connect("cases.db")
-    cursor = connection.cursor()
+    with sqlite3.connect(DB_FILE) as connection:
+        cursor = connection.cursor()
 
-    cursor.execute('SELECT * FROM cases')
-    rows = cursor.fetchall()
-    for row in rows:
-        print(row)
-    connection.close()
+        cursor.execute('SELECT * FROM cases')
+        rows = cursor.fetchall()
+        for row in rows:
+            print(row)
 
-# Uncomment the line below if you want to create the table
-# create_table()
-# Uncomment the line below if you want to insert a sample case
-# case_number = insert_case("Murder", "2023-01-01", 30)
-# print(f"Case inserted with case number: {case_number}")
-# Uncomment the line below if you want to print the contents of the table
-# print_table()
+if __name__ == "__main__":
+    create_table()
+    case_number = insert_case("M", "2024-03-12", 10)
+    print(f"Inserted case with case_number: {case_number}")
+    print("Current cases in the database:")
+    print_table()
