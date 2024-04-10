@@ -1,18 +1,62 @@
-from datetime import datetime
-from db_operations import create_table, insert_case
+# from datetime import datetime
+# from db_operations import create_table, insert_case
+
+# def calculate_waiting_time(last_hearing_date):
+#     last_hearing_datetime = datetime.strptime(last_hearing_date, "%d-%m-%Y")
+#     current_datetime = datetime.now()
+#     waiting_time = (current_datetime - last_hearing_datetime).days
+#     return waiting_time
+
+# def prioritize_cases(case_data):
+#     sorted_cases = sorted(case_data, key=lambda x: (get_priority_level(x['case_type'], x['waiting_time']), x['waiting_time']), reverse=True)
+    
+#     print("Cases sorted by priority and waiting time:")
+#     for case in sorted_cases:
+#         print(f"Case Number: {case['case_number']}, Case Type: {case['case_type']}, Last Hearing Date: {case['last_hearing_date']}, Waiting Time: {case['waiting_time']} days, Priority: {get_priority_level(case['case_type'], case['waiting_time'])}")
+
+# def get_priority_level(case_type, waiting_time):
+#     priority_levels = {
+#         'M': 3,
+#         'R': 2,
+#         'F': 1
+#     }
+    
+#     if waiting_time > 60:
+#         return 3
+    
+#     return priority_levels.get(case_type, 0)
+
+# if __name__ == "__main__":
+#     num_cases = int(input("Enter the number of cases: "))
+
+#     case_data = []
+#     for _ in range(num_cases):
+#         case_type = input("Enter the type of case (Murder(M), Robbery(R), or Financial Fraud(F)): ")
+#         last_hearing_date = input("Enter the last hearing date (DD-MM-YYYY): ")
+
+#         waiting_time = calculate_waiting_time(last_hearing_date)
+
+#         case_number_input = input("Enter a case number (press Enter to use timestamp-based case number): ")
+#         if case_number_input:
+#             case_number = int(case_number_input)
+#         else:
+#             case_number = int(datetime.timestamp(datetime.now()))
+
+#         create_table()
+#         insert_case(case_number, case_type, last_hearing_date, waiting_time)
+
+#         case_data.append({'case_number': case_number, 'case_type': case_type, 'last_hearing_date': last_hearing_date, 'waiting_time': waiting_time})
+
+#     prioritize_cases(case_data)
+
+from datetime import datetime, timedelta
+from db_operations import create_table, insert_case, update_next_hearing_date
 
 def calculate_waiting_time(last_hearing_date):
     last_hearing_datetime = datetime.strptime(last_hearing_date, "%d-%m-%Y")
     current_datetime = datetime.now()
     waiting_time = (current_datetime - last_hearing_datetime).days
     return waiting_time
-
-def prioritize_cases(case_data):
-    sorted_cases = sorted(case_data, key=lambda x: (get_priority_level(x['case_type'], x['waiting_time']), x['waiting_time']), reverse=True)
-    
-    print("Cases sorted by priority and waiting time:")
-    for case in sorted_cases:
-        print(f"Case Number: {case['case_number']}, Case Type: {case['case_type']}, Last Hearing Date: {case['last_hearing_date']}, Waiting Time: {case['waiting_time']} days, Priority: {get_priority_level(case['case_type'], case['waiting_time'])}")
 
 def get_priority_level(case_type, waiting_time):
     priority_levels = {
@@ -25,6 +69,16 @@ def get_priority_level(case_type, waiting_time):
         return 3
     
     return priority_levels.get(case_type, 0)
+
+def schedule_next_hearing(waiting_time, priority):
+    current_date = datetime.now()
+    days_to_add = {
+        1: 30,
+        2: 20,
+        3: 10
+    }[priority]
+    next_hearing_date = current_date + timedelta(days=days_to_add + waiting_time)
+    return next_hearing_date.strftime("%d-%m-%Y")
 
 if __name__ == "__main__":
     num_cases = int(input("Enter the number of cases: "))
@@ -42,9 +96,14 @@ if __name__ == "__main__":
         else:
             case_number = int(datetime.timestamp(datetime.now()))
 
+        priority = get_priority_level(case_type, waiting_time)
+
         create_table()
-        insert_case(case_number, case_type, last_hearing_date, waiting_time)
+        next_hearing_date = schedule_next_hearing(waiting_time, priority)
+        case_id = insert_case(case_number, case_type, last_hearing_date, waiting_time, priority, next_hearing_date)
 
-        case_data.append({'case_number': case_number, 'case_type': case_type, 'last_hearing_date': last_hearing_date, 'waiting_time': waiting_time})
+        case_data.append({'case_number': case_number, 'case_id': case_id, 'case_type': case_type, 'last_hearing_date': last_hearing_date, 'waiting_time': waiting_time, 'priority': priority, 'next_hearing_date': next_hearing_date})
 
-    prioritize_cases(case_data)
+    print("Cases sorted by priority and waiting time:")
+    for case in case_data:
+        print(f"Case Number: {case['case_number']}, Case ID: {case['case_id']}, Case Type: {case['case_type']}, Last Hearing Date: {case['last_hearing_date']}, Waiting Time: {case['waiting_time']} days, Priority: {case['priority']}, Next Hearing Date: {case['next_hearing_date']}")
