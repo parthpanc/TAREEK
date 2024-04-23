@@ -1,48 +1,108 @@
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
+# from db_operations import create_table, insert_case, schedule_next_hearing_date
+
+# def calculate_waiting_time(last_hearing_date):
+#     last_hearing_datetime = datetime.strptime(last_hearing_date, "%d-%m-%Y")
+#     current_datetime = datetime.now()
+#     waiting_time = (current_datetime - last_hearing_datetime).days
+#     return waiting_time
+
+# def get_priority_level(case_type, waiting_time):
+#     priority_levels = {
+#         'M': 3,
+#         'R': 2,
+#         'F': 1
+#     }
+    
+#     if waiting_time > 60:
+#         return 3
+    
+#     return priority_levels.get(case_type, 0)
+
+# if __name__ == "__main__":
+#     num_cases = int(input("Enter the number of cases: "))
+
+#     case_data = []
+#     for _ in range(num_cases):
+#         case_type = input("Enter the type of case (Murder(M), Robbery(R), or Financial Fraud(F)): ")
+#         last_hearing_date = input("Enter the last hearing date (DD-MM-YYYY): ")
+
+#         waiting_time = calculate_waiting_time(last_hearing_date)
+
+#         case_number_input = input("Enter a case number (press Enter to use timestamp-based case number): ")
+#         if case_number_input:
+#             case_number = int(case_number_input)
+#         else:
+#             case_number = int(datetime.timestamp(datetime.now()))
+
+#         priority = get_priority_level(case_type, waiting_time)
+
+#         create_table()
+#         next_hearing_date = schedule_next_hearing_date(waiting_time, priority, last_hearing_date)
+#         case_id = insert_case(case_number, case_type, last_hearing_date, waiting_time, priority, next_hearing_date)
+
+#         case_data.append({'case_number': case_number, 'case_id': case_id, 'case_type': case_type, 'last_hearing_date': last_hearing_date, 'waiting_time': waiting_time, 'priority': priority, 'next_hearing_date': next_hearing_date})
+
+#     print("Cases sorted by priority and waiting time:")
+#     for case in case_data:
+#         print(f"Case Number: {case['case_number']}, Case ID: {case['case_id']}, Case Type: {case['case_type']}, Last Hearing Date: {case['last_hearing_date']}, Waiting Time: {case['waiting_time']} days, Priority: {case['priority']}, Next Hearing Date: {case['next_hearing_date']}")
+
+
+import tkinter as tk
+from tkinter import ttk
+from tkcalendar import Calendar
+from datetime import datetime
 from db_operations import create_table, insert_case, schedule_next_hearing_date
 
 def calculate_waiting_time(last_hearing_date):
-    last_hearing_datetime = datetime.strptime(last_hearing_date, "%d-%m-%Y")
+    last_hearing_datetime = datetime.strptime(last_hearing_date, "%m/%d/%y")
     current_datetime = datetime.now()
     waiting_time = (current_datetime - last_hearing_datetime).days
     return waiting_time
 
-def get_priority_level(case_type, waiting_time):
-    priority_levels = {
-        'M': 3,
-        'R': 2,
-        'F': 1
-    }
-    
-    if waiting_time > 60:
-        return 3
-    
-    return priority_levels.get(case_type, 0)
+def submit_case():
+    case_type = case_type_var.get()
+    last_hearing_date = cal.get_date()
+    priority = int(priority_entry.get())
 
-if __name__ == "__main__":
-    num_cases = int(input("Enter the number of cases: "))
+    waiting_time = calculate_waiting_time(last_hearing_date)
+    case_number = int(datetime.timestamp(datetime.now()))
 
-    case_data = []
-    for _ in range(num_cases):
-        case_type = input("Enter the type of case (Murder(M), Robbery(R), or Financial Fraud(F)): ")
-        last_hearing_date = input("Enter the last hearing date (DD-MM-YYYY): ")
+    create_table()
+    next_hearing_date = schedule_next_hearing_date(waiting_time, priority, last_hearing_date)
+    case_id = insert_case(case_number, case_type, last_hearing_date, waiting_time, priority, next_hearing_date)
 
-        waiting_time = calculate_waiting_time(last_hearing_date)
+    output_text.insert(tk.END, f"Case ID: {case_id}, Next Hearing Date: {next_hearing_date}\n")
 
-        case_number_input = input("Enter a case number (press Enter to use timestamp-based case number): ")
-        if case_number_input:
-            case_number = int(case_number_input)
-        else:
-            case_number = int(datetime.timestamp(datetime.now()))
+# Create main window
+root = tk.Tk()
+root.title("Case Scheduler")
 
-        priority = get_priority_level(case_type, waiting_time)
+# Case Type
+case_type_label = tk.Label(root, text="Case Type:")
+case_type_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+case_type_var = tk.StringVar()
+case_type_combobox = ttk.Combobox(root, textvariable=case_type_var, values=["Murder (M)", "Robbery (R)", "Financial Fraud (F)"])
+case_type_combobox.grid(row=0, column=1, padx=10, pady=5, sticky="w")
 
-        create_table()
-        next_hearing_date = schedule_next_hearing_date(waiting_time, priority, last_hearing_date)
-        case_id = insert_case(case_number, case_type, last_hearing_date, waiting_time, priority, next_hearing_date)
+# Last Hearing Date
+last_hearing_label = tk.Label(root, text="Last Hearing Date:")
+last_hearing_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+cal = Calendar(root, selectmode="day", year=datetime.now().year, month=datetime.now().month, day=datetime.now().day)
+cal.grid(row=1, column=1, padx=10, pady=5, sticky="w")
 
-        case_data.append({'case_number': case_number, 'case_id': case_id, 'case_type': case_type, 'last_hearing_date': last_hearing_date, 'waiting_time': waiting_time, 'priority': priority, 'next_hearing_date': next_hearing_date})
+# Priority Level
+priority_label = tk.Label(root, text="Priority Level:")
+priority_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+priority_entry = tk.Entry(root)
+priority_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
 
-    print("Cases sorted by priority and waiting time:")
-    for case in case_data:
-        print(f"Case Number: {case['case_number']}, Case ID: {case['case_id']}, Case Type: {case['case_type']}, Last Hearing Date: {case['last_hearing_date']}, Waiting Time: {case['waiting_time']} days, Priority: {case['priority']}, Next Hearing Date: {case['next_hearing_date']}")
+# Submit Button
+submit_button = tk.Button(root, text="Submit", command=submit_case)
+submit_button.grid(row=3, columnspan=2, padx=10, pady=10)
+
+# Output Text
+output_text = tk.Text(root, height=10, width=50)
+output_text.grid(row=4, columnspan=2, padx=10, pady=5)
+
+root.mainloop()
